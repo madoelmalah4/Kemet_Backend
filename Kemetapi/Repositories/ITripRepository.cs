@@ -1,0 +1,10 @@
+using Kemet_api.Models;
+
+namespace Kemet_api.Repositories
+{
+    public interface ITripRepository : IRepository<Trip>
+    {
+        Task<Trip?> GetTripWithDaysAsync(Guid id);
+        Task<IEnumerable<Trip>> GetAllWithDaysAsync();
+    }
+}
