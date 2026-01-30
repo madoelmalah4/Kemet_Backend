@@ -20,7 +20,7 @@ namespace Kemet_api.Services
             var smtpHost = _configuration["EmailSettings:SmtpHost"];
             var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
             var smtpUser = _configuration["EmailSettings:SmtpUser"];
-            var smtpPass = _configuration["EmailSettings:SmtpPass"];
+            var smtpPass = _configuration["EmailSettings:SmtpPass"]?.Replace(" ", ""); // Sanitize password
             var fromEmail = _configuration["EmailSettings:FromEmail"];
 
             var email = new MimeMessage();
@@ -43,7 +43,8 @@ namespace Kemet_api.Services
             }
             catch (Exception ex)
             {
-                throw new Exception($"MailKit Error: Failed to send email to {to} via {smtpHost}:{smtpPort}. {ex.Message}", ex);
+                // Log the specific error for debugging
+                throw new Exception($"Failed to send email. Host: {smtpHost}:{smtpPort}, User: {smtpUser}. Error: {ex.Message}", ex);
             }
         }
 

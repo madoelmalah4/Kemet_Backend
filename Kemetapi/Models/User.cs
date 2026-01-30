@@ -40,6 +40,8 @@ namespace Kemet_api.Models
         public string? RefreshToken { get; set; }
         
         public DateTime? RefreshTokenExpiryTime { get; set; }
+
+        public ICollection<UserFavorite> Favorites { get; set; } = new List<UserFavorite>();
     }
 
     public enum UserRole

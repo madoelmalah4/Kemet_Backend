@@ -8,11 +8,18 @@ namespace Kemet_api.Services
     {
         private readonly ITripRepository _tripRepository;
         private readonly IRepository<Day> _dayRepository;
+        private readonly IRepository<DayActivity> _dayActivityRepository;
+        private readonly IDestinationRepository _destinationRepository;
 
-        public TripService(ITripRepository tripRepository, IRepository<Day> dayRepository)
+        public TripService(ITripRepository tripRepository, 
+                           IRepository<Day> dayRepository,
+                           IRepository<DayActivity> dayActivityRepository,
+                           IDestinationRepository destinationRepository)
         {
             _tripRepository = tripRepository;
             _dayRepository = dayRepository;
+            _dayActivityRepository = dayActivityRepository;
+            _destinationRepository = destinationRepository;
         }
 
         public async Task<IEnumerable<TripDto>> GetAllTripsAsync()
@@ -28,12 +35,16 @@ namespace Kemet_api.Services
             return MapToDto(trip);
         }
 
-        public async Task<TripDto> CreateTripAsync(CreateTripDto tripDto)
+        public async Task<TripDto> CreateTripAsync(CreateTripDto tripDto, Guid? userId = null)
         {
             var trip = new Trip
             {
+                UserId = userId,
                 Title = tripDto.Title,
-                TripType = tripDto.TripType,
+                TravelCompanions = tripDto.TravelCompanions,
+                TravelStyle = tripDto.TravelStyle,
+                ExperienceTypes = tripDto.ExperienceTypes,
+                Interests = tripDto.Interests,
                 StartDate = tripDto.StartDate,
                 EndDate = tripDto.EndDate,
                 DurationDays = tripDto.DurationDays,
@@ -46,7 +57,8 @@ namespace Kemet_api.Services
                     DayNumber = d.DayNumber,
                     Date = d.Date,
                     Title = d.Title,
-                    Description = d.Description
+                    Description = d.Description,
+                    City = d.City
                 }).ToList() ?? new List<Day>()
             };
 
@@ -60,7 +72,10 @@ namespace Kemet_api.Services
             if (trip == null) return null;
 
             trip.Title = tripDto.Title;
-            trip.TripType = tripDto.TripType;
+            trip.TravelCompanions = tripDto.TravelCompanions;
+            trip.TravelStyle = tripDto.TravelStyle;
+            trip.ExperienceTypes = tripDto.ExperienceTypes;
+            trip.Interests = tripDto.Interests;
             trip.StartDate = tripDto.StartDate;
             trip.EndDate = tripDto.EndDate;
             trip.DurationDays = tripDto.DurationDays;
@@ -92,10 +107,26 @@ namespace Kemet_api.Services
                 DayNumber = dayDto.DayNumber,
                 Date = dayDto.Date,
                 Title = dayDto.Title,
-                Description = dayDto.Description
+                Description = dayDto.Description,
+                City = dayDto.City
             };
 
             await _dayRepository.AddAsync(day);
+            return MapToDayDto(day);
+        }
+
+        public async Task<DayDto?> UpdateDayAsync(Guid tripId, Guid dayId, UpdateDayDto dayDto)
+        {
+            var day = await _dayRepository.GetByIdAsync(dayId);
+            if (day == null || day.TripId != tripId) return null;
+
+            day.DayNumber = dayDto.DayNumber;
+            day.Date = dayDto.Date;
+            day.Title = dayDto.Title;
+            day.Description = dayDto.Description;
+            day.City = dayDto.City;
+
+            await _dayRepository.UpdateAsync(day);
             return MapToDayDto(day);
         }
 
@@ -108,13 +139,81 @@ namespace Kemet_api.Services
             return true;
         }
 
+        public async Task<DayActivityDto?> AddActivityToDayAsync(Guid dayId, CreateDayActivityDto activityDto)
+        {
+            var day = await _dayRepository.GetByIdAsync(dayId);
+            if (day == null) return null;
+
+            var destination = await _destinationRepository.GetByIdAsync(activityDto.DestinationId);
+            if (destination == null) return null;
+
+            var activity = new DayActivity
+            {
+                DayId = dayId,
+                DestinationId = activityDto.DestinationId,
+                ActivityType = activityDto.ActivityType,
+                StartTime = activityDto.StartTime,
+                DurationHours = activityDto.DurationHours,
+                Description = activityDto.Description
+            };
+
+            await _dayActivityRepository.AddAsync(activity);
+            
+            // Manually populate Destination for DTO
+            activity.Destination = destination; 
+            return MapToDayActivityDto(activity);
+        }
+
+        public async Task<DayActivityDto?> UpdateActivityAsync(Guid dayId, Guid activityId, UpdateDayActivityDto activityDto)
+        {
+            var activity = await _dayActivityRepository.GetByIdAsync(activityId);
+            if (activity == null || activity.DayId != dayId) return null;
+
+            activity.ActivityType = activityDto.ActivityType;
+            activity.StartTime = activityDto.StartTime;
+            activity.DurationHours = activityDto.DurationHours;
+            activity.Description = activityDto.Description;
+            
+            if (activity.DestinationId != activityDto.DestinationId)
+            {
+                 var destination = await _destinationRepository.GetByIdAsync(activityDto.DestinationId);
+                 if (destination == null) return null;
+                 activity.DestinationId = activityDto.DestinationId;
+                 activity.Destination = destination;
+            }
+            else
+            {
+                 // Ensure destination is loaded if possible, otherwise fetch
+                 if (activity.Destination == null) 
+                 {
+                     activity.Destination = await _destinationRepository.GetByIdAsync(activity.DestinationId);
+                 }
+            }
+
+            await _dayActivityRepository.UpdateAsync(activity);
+            return MapToDayActivityDto(activity);
+        }
+
+        public async Task<bool> RemoveActivityAsync(Guid dayId, Guid activityId)
+        {
+            var activity = await _dayActivityRepository.GetByIdAsync(activityId);
+            if (activity == null || activity.DayId != dayId) return false;
+
+            await _dayActivityRepository.DeleteAsync(activity);
+            return true;
+        }
+
         private TripDto MapToDto(Trip trip)
         {
             return new TripDto
             {
                 Id = trip.Id,
+                UserId = trip.UserId,
                 Title = trip.Title,
-                TripType = trip.TripType,
+                TravelCompanions = trip.TravelCompanions,
+                TravelStyle = trip.TravelStyle,
+                ExperienceTypes = trip.ExperienceTypes,
+                Interests = trip.Interests,
                 StartDate = trip.StartDate,
                 EndDate = trip.EndDate,
                 DurationDays = trip.DurationDays,
@@ -135,7 +234,25 @@ namespace Kemet_api.Services
                 DayNumber = day.DayNumber,
                 Date = day.Date,
                 Title = day.Title,
-                Description = day.Description
+                Description = day.Description,
+                City = day.City,
+                Activities = day.DayActivities?.Select(MapToDayActivityDto).ToList() ?? new List<DayActivityDto>()
+            };
+        }
+
+        private DayActivityDto MapToDayActivityDto(DayActivity activity)
+        {
+            return new DayActivityDto
+            {
+                Id = activity.Id,
+                DayId = activity.DayId,
+                DestinationId = activity.DestinationId,
+                DestinationName = activity.Destination?.Name ?? "Unknown",
+                DestinationImageUrl = activity.Destination?.ImageUrl,
+                ActivityType = activity.ActivityType,
+                StartTime = activity.StartTime,
+                DurationHours = activity.DurationHours,
+                Description = activity.Description
             };
         }
     }

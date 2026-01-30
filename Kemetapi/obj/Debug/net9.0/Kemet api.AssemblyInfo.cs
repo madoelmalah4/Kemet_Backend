@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Kemet api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28ffd8ba2e9f25e0ee76f44438e2e80d8b3bf710")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+88b18d714f445a7f2cf33f0dde83dfd09d3816d2")]
 [assembly: System.Reflection.AssemblyProductAttribute("Kemet api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Kemet api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

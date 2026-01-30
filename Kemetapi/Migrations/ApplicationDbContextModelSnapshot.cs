@@ -28,6 +28,11 @@ namespace Kemet_api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime?>("Date")
                         .HasColumnType("datetime2");
 
@@ -53,6 +58,76 @@ namespace Kemet_api.Migrations
                     b.ToTable("Days");
                 });
 
+            modelBuilder.Entity("Kemet_api.Models.DayActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DayId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DestinationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("DurationHours")
+                        .HasColumnType("float");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DayId");
+
+                    b.HasIndex("DestinationId");
+
+                    b.ToTable("DayActivities");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.Destination", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan?>("EndWorkingHours")
+                        .HasColumnType("time");
+
+                    b.Property<decimal>("EstimatedPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<TimeSpan?>("FromWorkingHours")
+                        .HasColumnType("time");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Destinations");
+                });
+
             modelBuilder.Entity("Kemet_api.Models.Trip", b =>
                 {
                     b.Property<Guid>("Id")
@@ -72,7 +147,15 @@ namespace Kemet_api.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.PrimitiveCollection<string>("ExperienceTypes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.PrimitiveCollection<string>("Interests")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
@@ -86,11 +169,20 @@ namespace Kemet_api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("TripType")
+                    b.Property<string>("TravelCompanions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("TravelStyle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Trips");
                 });
@@ -157,6 +249,47 @@ namespace Kemet_api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Kemet_api.Models.UserFavorite", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DestinationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "DestinationId");
+
+                    b.HasIndex("DestinationId");
+
+                    b.ToTable("UserFavorites");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.VirtualTour", b =>
+                {
+                    b.Property<Guid>("Vr_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("Destination_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Vr_urlImage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Vr_id");
+
+                    b.HasIndex("Destination_id")
+                        .IsUnique();
+
+                    b.ToTable("VirtualTours");
+                });
+
             modelBuilder.Entity("Kemet_api.Models.Day", b =>
                 {
                     b.HasOne("Kemet_api.Models.Trip", "Trip")
@@ -168,9 +301,82 @@ namespace Kemet_api.Migrations
                     b.Navigation("Trip");
                 });
 
+            modelBuilder.Entity("Kemet_api.Models.DayActivity", b =>
+                {
+                    b.HasOne("Kemet_api.Models.Day", "Day")
+                        .WithMany("DayActivities")
+                        .HasForeignKey("DayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kemet_api.Models.Destination", "Destination")
+                        .WithMany()
+                        .HasForeignKey("DestinationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Day");
+
+                    b.Navigation("Destination");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.Trip", b =>
+                {
+                    b.HasOne("Kemet_api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.UserFavorite", b =>
+                {
+                    b.HasOne("Kemet_api.Models.Destination", "Destination")
+                        .WithMany()
+                        .HasForeignKey("DestinationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kemet_api.Models.User", "User")
+                        .WithMany("Favorites")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Destination");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.VirtualTour", b =>
+                {
+                    b.HasOne("Kemet_api.Models.Destination", "Destination")
+                        .WithOne("VirtualTour")
+                        .HasForeignKey("Kemet_api.Models.VirtualTour", "Destination_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Destination");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.Day", b =>
+                {
+                    b.Navigation("DayActivities");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.Destination", b =>
+                {
+                    b.Navigation("VirtualTour");
+                });
+
             modelBuilder.Entity("Kemet_api.Models.Trip", b =>
                 {
                     b.Navigation("Days");
+                });
+
+            modelBuilder.Entity("Kemet_api.Models.User", b =>
+                {
+                    b.Navigation("Favorites");
                 });
 #pragma warning restore 612, 618
         }

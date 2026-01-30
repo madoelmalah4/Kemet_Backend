@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Kemet_api.Models
 {
+
     public class Day
     {
         public Guid Id { get; set; }
@@ -23,5 +24,10 @@ namespace Kemet_api.Models
 
         [Required]
         public string Description { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string City { get; set; } = string.Empty;
+
+        public ICollection<DayActivity> DayActivities { get; set; } = new List<DayActivity>();
     }
 }

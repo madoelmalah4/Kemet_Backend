@@ -7,10 +7,15 @@ namespace Kemet_api.Services
     {
         Task<IEnumerable<TripDto>> GetAllTripsAsync();
         Task<TripDto?> GetTripByIdAsync(Guid id);
-        Task<TripDto> CreateTripAsync(CreateTripDto tripDto);
+        Task<TripDto> CreateTripAsync(CreateTripDto tripDto, Guid? userId = null);
         Task<TripDto?> UpdateTripAsync(Guid id, UpdateTripDto tripDto);
         Task<bool> DeleteTripAsync(Guid id);
         Task<DayDto?> AddDayToTripAsync(Guid tripId, CreateDayDto dayDto);
+        Task<DayDto?> UpdateDayAsync(Guid tripId, Guid dayId, UpdateDayDto dayDto);
         Task<bool> RemoveDayFromTripAsync(Guid tripId, Guid dayId);
+        
+        Task<DayActivityDto?> AddActivityToDayAsync(Guid dayId, CreateDayActivityDto activityDto);
+        Task<DayActivityDto?> UpdateActivityAsync(Guid dayId, Guid activityId, UpdateDayActivityDto activityDto);
+        Task<bool> RemoveActivityAsync(Guid dayId, Guid activityId);
     }
 }

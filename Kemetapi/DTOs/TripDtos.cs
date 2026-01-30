@@ -10,7 +10,14 @@ namespace Kemet_api.DTOs
         public string Title { get; set; } = string.Empty;
 
         [Required]
-        public TripType TripType { get; set; }
+        public TravelCompanion TravelCompanions { get; set; }
+
+        [Required]
+        public TravelStyle TravelStyle { get; set; }
+
+        public List<string> ExperienceTypes { get; set; } = new();
+
+        public List<string> Interests { get; set; } = new();
 
         public DateTime StartDate { get; set; }
 
@@ -36,8 +43,14 @@ namespace Kemet_api.DTOs
     public class TripDto
     {
         public Guid Id { get; set; }
+        public Guid? UserId { get; set; }
         public string Title { get; set; } = string.Empty;
-        public TripType TripType { get; set; }
+        
+        public TravelCompanion TravelCompanions { get; set; }
+        public TravelStyle TravelStyle { get; set; }
+        public List<string> ExperienceTypes { get; set; } = new();
+        public List<string> Interests { get; set; } = new();
+
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int DurationDays { get; set; }
@@ -61,6 +74,9 @@ namespace Kemet_api.DTOs
 
         [Required]
         public string Description { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string City { get; set; } = string.Empty;
     }
 
     public class UpdateDayDto : CreateDayDto
@@ -75,5 +91,39 @@ namespace Kemet_api.DTOs
         public DateTime? Date { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public ICollection<DayActivityDto> Activities { get; set; } = new List<DayActivityDto>();
+    }
+
+    public class CreateDayActivityDto
+    {
+        [Required]
+        public Guid DestinationId { get; set; }
+
+        [Required]
+        public ActivityType ActivityType { get; set; }
+
+        public TimeSpan StartTime { get; set; }
+
+        public double DurationHours { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+    public class UpdateDayActivityDto : CreateDayActivityDto
+    {
+    }
+
+    public class DayActivityDto
+    {
+        public Guid Id { get; set; }
+        public Guid DayId { get; set; }
+        public Guid DestinationId { get; set; }
+        public string DestinationName { get; set; } = string.Empty; // Useful for UI
+        public string? DestinationImageUrl { get; set; }
+        public ActivityType ActivityType { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public double DurationHours { get; set; }
+        public string? Description { get; set; }
     }
 }

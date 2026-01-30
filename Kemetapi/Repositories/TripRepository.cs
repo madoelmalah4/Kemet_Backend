@@ -14,12 +14,16 @@ namespace Kemet_api.Repositories
         {
             return await _dbSet
                 .Include(t => t.Days)
+                    .ThenInclude(d => d.DayActivities)
+                        .ThenInclude(da => da.Destination)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
         public async Task<IEnumerable<Trip>> GetAllWithDaysAsync()
         {
             return await _dbSet
                 .Include(t => t.Days)
+                    .ThenInclude(d => d.DayActivities)
+                        .ThenInclude(da => da.Destination)
                 .ToListAsync();
         }
     }

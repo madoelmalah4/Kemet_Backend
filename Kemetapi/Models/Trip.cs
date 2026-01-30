@@ -1,15 +1,33 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Kemet_api.Models
 {
     public class Trip
     {
         public Guid Id { get; set; }
+
+        public Guid? UserId { get; set; }
+        [ForeignKey("UserId")]
+        public User? User { get; set; }
+
         [Required]
         [MaxLength(200)]
         public string Title { get; set; } = string.Empty;
+
+        // Merged from Questionnaire: Replaces old TripType
         [Required]
-        public TripType TripType { get; set; }
+        public TravelCompanion TravelCompanions { get; set; }
+
+        // Merged from Questionnaire
+        [Required]
+        public TravelStyle TravelStyle { get; set; }
+
+        // Merged from Questionnaire: Stored as JSON
+        public List<string> ExperienceTypes { get; set; } = new();
+
+        // Merged from Questionnaire: Stored as JSON
+        public List<string> Interests { get; set; } = new();
 
         public DateTime StartDate { get; set; }
 
@@ -29,12 +47,18 @@ namespace Kemet_api.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
-
-    public enum TripType
+    public enum TravelCompanion
     {
-        Single = 0,
-        Family = 1,
-        Couple = 2,
-        Group = 3
+        Solo,
+        Couple,
+        Family,
+        Friends
+    }
+
+    public enum TravelStyle
+    {
+        Budget,
+        MidBudget,
+        Luxury
     }
 }
