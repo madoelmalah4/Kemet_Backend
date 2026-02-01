@@ -16,22 +16,42 @@ namespace Kemet_api.Controllers
             _tripService = tripService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllTrips()
         {
-            // TODO: Filter based on user? Existing requirement implies public listing.
-            var trips = await _tripService.GetAllTripsAsync();
-            return Ok(trips);
+            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
+
+            if (User.IsInRole("Admin"))
+            {
+                var allTrips = await _tripService.GetAllTripsAsync();
+                return Ok(allTrips);
+            }
+
+            var userTrips = await _tripService.GetUserTripsAsync(userId);
+            return Ok(userTrips);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTripById(Guid id)
         {
-            var trip = await _tripService.GetTripByIdAsync(id);
-            if (trip == null)
+            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userIdString, out var userId)) return Unauthorized();
+
+            TripDto? trip;
+            if (User.IsInRole("Admin"))
             {
-                return NotFound();
+                trip = await _tripService.GetTripByIdAsync(id);
             }
+            else
+            {
+                trip = await _tripService.GetUserTripByIdAsync(id, userId);
+            }
+
+            if (trip == null) return NotFound();
+            
             return Ok(trip);
         }
 
@@ -170,17 +190,14 @@ namespace Kemet_api.Controllers
 
         private async Task<bool> CanEditTrip(Guid tripId)
         {
-            var trip = await _tripService.GetTripByIdAsync(tripId);
-            if (trip == null) return false;
-
             if (User.IsInRole("Admin")) return true;
 
             var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdString, out var userId))
-            {
-                return trip.UserId == userId;
-            }
-            return false;
+            if (!Guid.TryParse(userIdString, out var userId)) return false;
+
+            // Efficiently check ownership using the service method that filters by UserId
+            var trip = await _tripService.GetUserTripByIdAsync(tripId, userId);
+            return trip != null;
         }
     }
 }

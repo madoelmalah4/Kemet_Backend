@@ -6,7 +6,9 @@ namespace Kemet_api.Services
     public interface ITripService
     {
         Task<IEnumerable<TripDto>> GetAllTripsAsync();
+        Task<IEnumerable<TripDto>> GetUserTripsAsync(Guid userId);
         Task<TripDto?> GetTripByIdAsync(Guid id);
+        Task<TripDto?> GetUserTripByIdAsync(Guid tripId, Guid userId);
         Task<TripDto> CreateTripAsync(CreateTripDto tripDto, Guid? userId = null);
         Task<TripDto?> UpdateTripAsync(Guid id, UpdateTripDto tripDto);
         Task<bool> DeleteTripAsync(Guid id);

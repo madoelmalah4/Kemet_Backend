@@ -77,6 +77,8 @@ namespace Kemet_api.DTOs
 
         [MaxLength(100)]
         public string City { get; set; } = string.Empty;
+
+        public List<CreateDayActivityDto>? Activities { get; set; }
     }
 
     public class UpdateDayDto : CreateDayDto

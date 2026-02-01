@@ -27,10 +27,23 @@ namespace Kemet_api.Services
             var trips = await _tripRepository.GetAllWithDaysAsync();
             return trips.Select(MapToDto);
         }
+        
+        public async Task<IEnumerable<TripDto>> GetUserTripsAsync(Guid userId)
+        {
+            var trips = await _tripRepository.GetTripsByUserIdAsync(userId);
+            return trips.Select(MapToDto);
+        }
 
         public async Task<TripDto?> GetTripByIdAsync(Guid id)
         {
             var trip = await _tripRepository.GetTripWithDaysAsync(id);
+            if (trip == null) return null;
+            return MapToDto(trip);
+        }
+
+        public async Task<TripDto?> GetUserTripByIdAsync(Guid tripId, Guid userId)
+        {
+            var trip = await _tripRepository.GetUserTripWithDaysAsync(tripId, userId);
             if (trip == null) return null;
             return MapToDto(trip);
         }
@@ -58,12 +71,23 @@ namespace Kemet_api.Services
                     Date = d.Date,
                     Title = d.Title,
                     Description = d.Description,
-                    City = d.City
+                    City = d.City,
+                    DayActivities = d.Activities?.Select(a => new DayActivity
+                    {
+                        DestinationId = a.DestinationId,
+                        ActivityType = a.ActivityType,
+                        StartTime = a.StartTime,
+                        DurationHours = a.DurationHours,
+                        Description = a.Description
+                    }).ToList() ?? new List<DayActivity>()
                 }).ToList() ?? new List<Day>()
             };
 
             await _tripRepository.AddAsync(trip);
-            return MapToDto(trip);
+            
+            // Reload with all includes to get Destination names etc.
+            var result = await _tripRepository.GetTripWithDaysAsync(trip.Id);
+            return MapToDto(result!);
         }
 
         public async Task<TripDto?> UpdateTripAsync(Guid id, UpdateTripDto tripDto)
@@ -108,7 +132,15 @@ namespace Kemet_api.Services
                 Date = dayDto.Date,
                 Title = dayDto.Title,
                 Description = dayDto.Description,
-                City = dayDto.City
+                City = dayDto.City,
+                DayActivities = dayDto.Activities?.Select(a => new DayActivity
+                {
+                    DestinationId = a.DestinationId,
+                    ActivityType = a.ActivityType,
+                    StartTime = a.StartTime,
+                    DurationHours = a.DurationHours,
+                    Description = a.Description
+                }).ToList() ?? new List<DayActivity>()
             };
 
             await _dayRepository.AddAsync(day);
