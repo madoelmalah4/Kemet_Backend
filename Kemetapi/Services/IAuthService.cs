@@ -16,5 +16,9 @@ namespace Kemet_api.Services
         Task<(bool success, string message)> ResetPasswordAsync(string email, string otp, string newPassword);
         Task<(bool success, string message)> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
         Task<(bool success, string message)> ResendOtpAsync(string email);
+
+        // Role Management
+        Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<(bool success, string message)> UpdateUserRoleAsync(Guid userId, UserRole newRole);
     }
 }

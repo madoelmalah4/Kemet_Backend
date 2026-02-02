@@ -21,20 +21,34 @@ namespace Kemet_api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
-            var destinations = await _destinationService.GetAllDestinationsAsync();
-            return Ok(destinations);
+            try
+            {
+                var destinations = await _destinationService.GetAllDestinationsAsync();
+                return Ok(destinations);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving destinations", error = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var destination = await _destinationService.GetDestinationByIdAsync(id);
-            if (destination == null)
+            try
             {
-                return NotFound("Destination not found.");
+                var destination = await _destinationService.GetDestinationByIdAsync(id);
+                if (destination == null)
+                {
+                    return NotFound(new { message = $"Destination with ID {id} not found" });
+                }
+                return Ok(destination);
             }
-            return Ok(destination);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving the destination", error = ex.Message });
+            }
         }
 
         [HttpPost]
@@ -43,11 +57,22 @@ namespace Kemet_api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Invalid destination data", errors = ModelState });
             }
 
-            var createdDestination = await _destinationService.CreateDestinationAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = createdDestination.Id }, createdDestination);
+            try
+            {
+                var createdDestination = await _destinationService.CreateDestinationAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = createdDestination.Id }, createdDestination);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = "Validation error", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while creating the destination", error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -56,68 +81,114 @@ namespace Kemet_api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Invalid destination data", errors = ModelState });
             }
 
-            var updatedDestination = await _destinationService.UpdateDestinationAsync(id, dto);
-            if (updatedDestination == null)
+            try
             {
-                return NotFound("Destination not found.");
-            }
+                var updatedDestination = await _destinationService.UpdateDestinationAsync(id, dto);
+                if (updatedDestination == null)
+                {
+                    return NotFound(new { message = $"Destination with ID {id} not found" });
+                }
 
-            return Ok(updatedDestination);
+                return Ok(updatedDestination);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = "Validation error", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the destination", error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _destinationService.DeleteDestinationAsync(id);
-            if (!result)
+            try
             {
-                return NotFound("Destination not found.");
-            }
+                var result = await _destinationService.DeleteDestinationAsync(id);
+                if (!result)
+                {
+                    return NotFound(new { message = $"Destination with ID {id} not found" });
+                }
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = "Cannot delete destination", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the destination", error = ex.Message });
+            }
         }
+
         [HttpPost("{id}/favorite")]
         [Authorize]
         public async Task<IActionResult> AddFavorite(Guid id)
         {
-            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
-                return Unauthorized();
+            try
+            {
+                var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                    return Unauthorized(new { message = "Invalid user credentials" });
 
-            var result = await _destinationService.AddToFavoritesAsync(userId, id);
-            if (!result) return BadRequest("Already favorited or destination not found.");
-            
-            return Ok(new { message = "Added to favorites." });
+                var result = await _destinationService.AddToFavoritesAsync(userId, id);
+                if (!result) 
+                    return BadRequest(new { message = "Destination already favorited or not found" });
+                
+                return Ok(new { message = "Destination added to favorites successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while adding to favorites", error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}/favorite")]
         [Authorize]
         public async Task<IActionResult> RemoveFavorite(Guid id)
         {
-            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
-                return Unauthorized();
+            try
+            {
+                var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                    return Unauthorized(new { message = "Invalid user credentials" });
 
-            var result = await _destinationService.RemoveFromFavoritesAsync(userId, id);
-            if (!result) return BadRequest("Not favorited or destination not found.");
+                var result = await _destinationService.RemoveFromFavoritesAsync(userId, id);
+                if (!result) 
+                    return BadRequest(new { message = "Destination not in favorites or not found" });
 
-            return Ok(new { message = "Removed from favorites." });
+                return Ok(new { message = "Destination removed from favorites successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while removing from favorites", error = ex.Message });
+            }
         }
 
         [HttpGet("favorites")]
         [Authorize]
         public async Task<IActionResult> GetFavorites()
         {
-            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
-                return Unauthorized();
+            try
+            {
+                var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                    return Unauthorized(new { message = "Invalid user credentials" });
 
-            var favorites = await _destinationService.GetUserFavoritesAsync(userId);
-            return Ok(favorites);
+                var favorites = await _destinationService.GetUserFavoritesAsync(userId);
+                return Ok(favorites);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving favorites", error = ex.Message });
+            }
         }
     }
 }

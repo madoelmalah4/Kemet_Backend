@@ -214,6 +214,21 @@ namespace Kemet_api.Services
             return existingEmail != null;
         }
 
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            return await _userRepository.GetAllAsync();
+        }
+
+        public async Task<(bool success, string message)> UpdateUserRoleAsync(Guid userId, UserRole newRole)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return (false, "User not found");
+
+            user.Role = newRole;
+            await _userRepository.UpdateAsync(user);
+            return (true, $"User role updated to {newRole} successfully");
+        }
+
         private string GenerateRandomOtp()
         {
             return RandomNumberGenerator.GetInt32(100000, 999999).ToString();

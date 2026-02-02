@@ -17,10 +17,18 @@ namespace Kemet_api.Data
         public DbSet<UserFavorite> UserFavorites { get; set; }
 
         public DbSet<VirtualTour> VirtualTours { get; set; }
+        public DbSet<AnalyticsEvent> AnalyticsEvents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AnalyticsEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.EventType);
+                entity.HasIndex(e => e.CreatedAt);
+            });
 
             modelBuilder.Entity<User>(entity =>
             {
@@ -35,12 +43,30 @@ namespace Kemet_api.Data
                 entity.Property(e => e.TravelCompanions).HasConversion<string>();
                 entity.Property(e => e.TravelStyle).HasConversion<string>();
                 entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+                
+                // Add index on UserId for efficient user trip queries
+                entity.HasIndex(e => e.UserId);
+                
+                // Add index on CreatedAt for sorting and filtering
+                entity.HasIndex(e => e.CreatedAt);
+                
                 // EF Core 8+ handles List<string> automatically as JSON collections
                 
                 entity.HasMany(t => t.Days)
                       .WithOne(d => d.Trip)
                       .HasForeignKey(d => d.TripId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Day>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                // Add composite index for efficient day lookups within a trip
+                entity.HasIndex(e => new { e.TripId, e.DayNumber });
+                
+                // Add index on TripId for foreign key queries
+                entity.HasIndex(e => e.TripId);
             });
 
             modelBuilder.Entity<Destination>(entity =>
@@ -59,6 +85,16 @@ namespace Kemet_api.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.ActivityType).HasConversion<string>();
+                
+                // Add index on DayId for efficient activity lookups within a day
+                entity.HasIndex(e => e.DayId);
+                
+                // Add index on DestinationId for destination-based queries
+                entity.HasIndex(e => e.DestinationId);
+                
+                // Add composite index for day activities ordered by start time
+                entity.HasIndex(e => new { e.DayId, e.StartTime });
+                
                 entity.HasOne(da => da.Day)
                       .WithMany(d => d.DayActivities)
                       .HasForeignKey(da => da.DayId)

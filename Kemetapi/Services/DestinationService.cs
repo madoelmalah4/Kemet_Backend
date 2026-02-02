@@ -7,10 +7,12 @@ namespace Kemet_api.Services
     public class DestinationService : IDestinationService
     {
         private readonly IDestinationRepository _destinationRepository;
+        private readonly IDashboardService _dashboardService;
 
-        public DestinationService(IDestinationRepository destinationRepository)
+        public DestinationService(IDestinationRepository destinationRepository, IDashboardService dashboardService)
         {
             _destinationRepository = destinationRepository;
+            _dashboardService = dashboardService;
         }
 
         public async Task<IEnumerable<DestinationDto>> GetAllDestinationsAsync()
@@ -35,6 +37,9 @@ namespace Kemet_api.Services
         {
             var destination = await _destinationRepository.GetByIdWithVirtualTourAsync(id);
             if (destination == null) return null;
+
+            // Track view
+            await _dashboardService.TrackEventAsync("DestinationView", destination.Name);
 
             return new DestinationDto
             {
