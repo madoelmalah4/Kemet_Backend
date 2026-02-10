@@ -19,9 +19,15 @@ namespace Kemet_api.Services
         {
             var smtpHost = _configuration["EmailSettings:SmtpHost"];
             var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
-            var smtpUser = _configuration["EmailSettings:SmtpUser"];
-            var smtpPass = _configuration["EmailSettings:SmtpPass"]?.Replace(" ", ""); // Sanitize password
-            var fromEmail = _configuration["EmailSettings:FromEmail"];
+            var smtpUser = _configuration["EmailSettings:SmtpUser"]?.Trim();
+            // Sanitize password: remove spaces which are common in App Passwords
+            var smtpPass = _configuration["EmailSettings:SmtpPass"]?.Trim().Replace(" ", ""); 
+            var fromEmail = _configuration["EmailSettings:FromEmail"]?.Trim();
+
+            if (string.IsNullOrEmpty(smtpUser) || string.IsNullOrEmpty(smtpPass))
+            {
+                throw new InvalidOperationException("Email credentials (User/Pass) are missing in configuration.");
+            }
 
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(fromEmail));
@@ -40,6 +46,10 @@ namespace Kemet_api.Services
                 await smtp.AuthenticateAsync(smtpUser, smtpPass);
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);
+            }
+            catch (AuthenticationException authEx)
+            {
+                throw new Exception($"Authentication failed. Please check your qualifications. Host: {smtpHost}, User: {smtpUser}. Error: {authEx.Message}. ensure you are using an App Password if 2FA is enabled.", authEx);
             }
             catch (Exception ex)
             {

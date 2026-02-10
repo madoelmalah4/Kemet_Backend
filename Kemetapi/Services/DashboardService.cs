@@ -24,17 +24,27 @@ namespace Kemet_api.Services
             var sevenMonthsAgo = new DateTime(now.Year, now.Month, 1).AddMonths(-6);
 
             // 1. User Growth Trend (Last 7 Months)
-            var userGrowth = await _context.Users
+            // Fix: Perform formatting in memory
+            var userGrowthRaw = await _context.Users
                 .Where(u => u.CreatedAt >= sevenMonthsAgo)
                 .GroupBy(u => new { u.CreatedAt.Year, u.CreatedAt.Month })
-                .Select(g => new GrowthTrendDto
+                .Select(g => new
                 {
-                    Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
                     NewUsers = g.Count()
                 })
                 .ToListAsync();
 
-            // Fill missing months with 0
+            var userGrowth = userGrowthRaw
+                .Select(g => new GrowthTrendDto
+                {
+                    Month = new DateTime(g.Year, g.Month, 1).ToString("MMM"),
+                    NewUsers = g.NewUsers
+                })
+                .ToList();
+
+            // Fill missing months
             var allMonths = Enumerable.Range(0, 7)
                 .Select(i => sevenMonthsAgo.AddMonths(i))
                 .Select(d => new GrowthTrendDto { Month = d.ToString("MMM"), NewUsers = 0 })
@@ -46,14 +56,13 @@ namespace Kemet_api.Services
                 if (found != null) month.NewUsers = found.NewUsers;
             }
 
-            // 2. Destination Popularity (Based on DayActivities and UserFavorites)
-            // If we have AnalyticsEvents for DestinationView, we use those. 
-            // Otherwise, we use DayActivities as a proxy.
+            // 2. Destination Popularity
+            // Simplify projection to avoid subquery translation issues if any
             var destinationPopularity = await _context.Destinations
                 .Select(d => new DestinationPopularityDto
                 {
                     Name = d.Name,
-                    Count = (d.VirtualTour != null ? 10 : 0) + // Dummy weight for virtual tours
+                    Count = (d.VirtualTour != null ? 10 : 0) +
                             _context.DayActivities.Count(da => da.DestinationId == d.Id) +
                             _context.UserFavorites.Count(uf => uf.DestinationId == d.Id)
                 })
@@ -72,7 +81,6 @@ namespace Kemet_api.Services
                 })
                 .ToListAsync();
 
-            // If empty, provide some default features with 0
             if (!featureUsage.Any())
             {
                 featureUsage = new List<FeatureUsageDto>
@@ -90,15 +98,24 @@ namespace Kemet_api.Services
                 f.Percentage = totalFeatureUses > 0 ? (double)f.UsageCount / totalFeatureUses * 100 : 0;
             }
 
-            // 4. Daily Activity (Activities per day of week)
-            var dailyActivity = await _context.Trips
+            // 4. Daily Activity
+            // Fix: Perform formatting in memory
+            var dailyActivityRaw = await _context.Trips
                 .GroupBy(t => t.CreatedAt.DayOfWeek)
-                .Select(g => new DailyActivityDto
+                .Select(g => new
                 {
-                    Day = g.Key.ToString().Substring(0, 3),
+                    DayOfWeek = g.Key,
                     ActivityCount = g.Count()
                 })
                 .ToListAsync();
+
+            var dailyActivity = dailyActivityRaw
+                .Select(g => new DailyActivityDto
+                {
+                    Day = g.DayOfWeek.ToString().Substring(0, 3),
+                    ActivityCount = g.ActivityCount
+                })
+                .ToList();
 
             var daysOfWeek = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
             var fullDailyActivity = daysOfWeek.Select(d => new DailyActivityDto
@@ -109,16 +126,15 @@ namespace Kemet_api.Services
 
             // 5. Summary Statistics
             var totalUsers = await _context.Users.CountAsync();
-            var totalViews = await _context.AnalyticsEvents.CountAsync(e => e.EventType == "DestinationView") + 
+            var totalViews = await _context.AnalyticsEvents.CountAsync(e => e.EventType == "DestinationView") +
                             await _context.DayActivities.CountAsync(); // Using DayActivities as views fallback
 
-            // Growth Rate Calculation (this month vs last month)
             var thisMonthStart = new DateTime(now.Year, now.Month, 1);
             var lastMonthStart = thisMonthStart.AddMonths(-1);
-            
+
             var thisMonthUsers = await _context.Users.CountAsync(u => u.CreatedAt >= thisMonthStart);
             var lastMonthUsers = await _context.Users.CountAsync(u => u.CreatedAt >= lastMonthStart && u.CreatedAt < thisMonthStart);
-            
+
             double growthRate = 0;
             if (lastMonthUsers > 0)
             {
