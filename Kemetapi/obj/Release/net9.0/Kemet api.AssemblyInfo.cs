@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Kemet api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8b7e424f8163e9baa1aab6914a1d6f1c51a91e92")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+942ccc8b5fa6e2489d04d356cf008019afcdebdc")]
 [assembly: System.Reflection.AssemblyProductAttribute("Kemet api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Kemet api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
