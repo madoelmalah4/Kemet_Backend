@@ -14,5 +14,7 @@ namespace Kemet_api.DTOs.Destination
         public TimeSpan? EndWorkingHours { get; set; }
         public Guid? VrId { get; set; }
         public string? VrUrlImage { get; set; }
+        public Guid? CategoryId { get; set; }
+        public string? CategoryTitle { get; set; }
     }
 }

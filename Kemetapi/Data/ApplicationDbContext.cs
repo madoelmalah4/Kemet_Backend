@@ -18,6 +18,7 @@ namespace Kemet_api.Data
 
         public DbSet<VirtualTour> VirtualTours { get; set; }
         public DbSet<AnalyticsEvent> AnalyticsEvents { get; set; }
+        public DbSet<Category> Categories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -79,6 +80,12 @@ namespace Kemet_api.Data
                       .WithOne(v => v.Destination)
                       .HasForeignKey<VirtualTour>(v => v.Destination_id)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                // Relationship with Category
+                entity.HasOne(e => e.Category)
+                      .WithMany(c => c.Destinations)
+                      .HasForeignKey(e => e.CategoryId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<DayActivity>(entity =>

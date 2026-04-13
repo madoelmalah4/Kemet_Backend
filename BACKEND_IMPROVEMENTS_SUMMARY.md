@@ -18,7 +18,7 @@ Successfully completed comprehensive improvements to the Kemet Tourism Backend A
 #### New Validations
 - ✅ Date range validation (end date > start date)
 - ✅ Duration calculation validation
-- ✅ Destination ID existence checks
+- ✅ nts nation ID existence checks
 - ✅ Sequential day number validation
 - ✅ Duplicate day number prevention
 - ✅ Activity duration validation (must be > 0)
@@ -236,6 +236,23 @@ http://localhost:5131/swagger
 
 ### Database
 1. ✅ Migration: `AddPerformanceIndexes` - Applied successfully
+
+---
+
+## 🏷️ Categories Feature Added
+
+### Models & Database
+- ✅ Created `Category` model (`Id`, `Title`)
+- ✅ Updated `Destination` model to include `CategoryId` and `Category` relation
+- ✅ Added `DbSet<Category>` to `ApplicationDbContext`
+
+### DTOs & Services
+- ✅ Added `CategoryDto` and `CreateCategoryDto`
+- ✅ Updated `CreateDestinationDto`, `UpdateDestinationDto`, and `DestinationDto` to support Category mappings
+- ✅ Configured `DestinationService` and `DestinationRepository` to include and handle category assignments.
+
+### Endpoints
+- ✅ Implemented `CategoryController` with `GET` and `POST` endpoints.
 
 ---
 

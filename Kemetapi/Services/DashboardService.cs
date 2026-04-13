@@ -100,14 +100,15 @@ namespace Kemet_api.Services
 
             // 4. Daily Activity
             // Fix: Perform formatting in memory
-            var dailyActivityRaw = await _context.Trips
-                .GroupBy(t => t.CreatedAt.DayOfWeek)
+            var trips = await _context.Trips.Select(t => t.CreatedAt).ToListAsync();
+            var dailyActivityRaw = trips
+                .GroupBy(d => d.DayOfWeek)
                 .Select(g => new
                 {
                     DayOfWeek = g.Key,
                     ActivityCount = g.Count()
                 })
-                .ToListAsync();
+                .ToList();
 
             var dailyActivity = dailyActivityRaw
                 .Select(g => new DailyActivityDto

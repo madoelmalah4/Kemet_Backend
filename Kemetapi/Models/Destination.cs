@@ -25,5 +25,9 @@ namespace Kemet_api.Models
         public TimeSpan? EndWorkingHours { get; set; }
 
         public VirtualTour? VirtualTour { get; set; }
+
+        public Guid? CategoryId { get; set; }
+        public Category? Category { get; set; }
+        
     }
 }

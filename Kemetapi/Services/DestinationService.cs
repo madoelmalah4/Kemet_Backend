@@ -29,7 +29,9 @@ namespace Kemet_api.Services
                 FromWorkingHours = d.FromWorkingHours,
                 EndWorkingHours = d.EndWorkingHours,
                 VrId = d.VirtualTour?.Vr_id,
-                VrUrlImage = d.VirtualTour?.Vr_urlImage
+                VrUrlImage = d.VirtualTour?.Vr_urlImage,
+                CategoryId = d.CategoryId,
+                CategoryTitle = d.Category?.Title
             });
         }
 
@@ -52,7 +54,9 @@ namespace Kemet_api.Services
                 FromWorkingHours = destination.FromWorkingHours,
                 EndWorkingHours = destination.EndWorkingHours,
                 VrId = destination.VirtualTour?.Vr_id,
-                VrUrlImage = destination.VirtualTour?.Vr_urlImage
+                VrUrlImage = destination.VirtualTour?.Vr_urlImage,
+                CategoryId = destination.CategoryId,
+                CategoryTitle = destination.Category?.Title
             };
         }
 
@@ -67,7 +71,8 @@ namespace Kemet_api.Services
                 ImageUrl = dto.ImageUrl,
                 EstimatedPrice = dto.EstimatedPrice,
                 FromWorkingHours = dto.FromWorkingHours,
-                EndWorkingHours = dto.EndWorkingHours
+                EndWorkingHours = dto.EndWorkingHours,
+                CategoryId = dto.CategoryId
             };
 
             if (!string.IsNullOrEmpty(dto.VrUrlImage))
@@ -94,7 +99,9 @@ namespace Kemet_api.Services
                 FromWorkingHours = destination.FromWorkingHours,
                 EndWorkingHours = destination.EndWorkingHours,
                 VrId = destination.VirtualTour?.Vr_id,
-                VrUrlImage = destination.VirtualTour?.Vr_urlImage
+                VrUrlImage = destination.VirtualTour?.Vr_urlImage,
+                CategoryId = destination.CategoryId,
+                CategoryTitle = destination.Category?.Title
             };
         }
 
@@ -110,6 +117,10 @@ namespace Kemet_api.Services
             existingDestination.EstimatedPrice = dto.EstimatedPrice;
             existingDestination.FromWorkingHours = dto.FromWorkingHours;
             existingDestination.EndWorkingHours = dto.EndWorkingHours;
+            if (dto.CategoryId.HasValue)
+            {
+                existingDestination.CategoryId = dto.CategoryId.Value;
+            }
 
             if (!string.IsNullOrEmpty(dto.VrUrlImage))
             {
@@ -142,7 +153,9 @@ namespace Kemet_api.Services
                 FromWorkingHours = existingDestination.FromWorkingHours,
                 EndWorkingHours = existingDestination.EndWorkingHours,
                 VrId = existingDestination.VirtualTour?.Vr_id,
-                VrUrlImage = existingDestination.VirtualTour?.Vr_urlImage
+                VrUrlImage = existingDestination.VirtualTour?.Vr_urlImage,
+                CategoryId = existingDestination.CategoryId,
+                CategoryTitle = existingDestination.Category?.Title
             };
         }
 
@@ -196,7 +209,9 @@ namespace Kemet_api.Services
                 FromWorkingHours = d.FromWorkingHours,
                 EndWorkingHours = d.EndWorkingHours,
                 VrId = d.VirtualTour?.Vr_id,
-                VrUrlImage = d.VirtualTour?.Vr_urlImage
+                VrUrlImage = d.VirtualTour?.Vr_urlImage,
+                CategoryId = d.CategoryId,
+                CategoryTitle = d.Category?.Title
             });
         }
     }

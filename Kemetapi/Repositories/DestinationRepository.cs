@@ -14,6 +14,7 @@ namespace Kemet_api.Repositories
         {
             return await _context.Destinations
                 .Include(d => d.VirtualTour)
+                .Include(d => d.Category)
                 .ToListAsync();
         }
 
@@ -21,6 +22,7 @@ namespace Kemet_api.Repositories
         {
             return await _context.Destinations
                 .Include(d => d.VirtualTour)
+                .Include(d => d.Category)
                 .FirstOrDefaultAsync(d => d.Id == id);
         }
 
@@ -46,6 +48,7 @@ namespace Kemet_api.Repositories
             return await _context.Destinations
                 .Where(d => _context.UserFavorites.Any(uf => uf.UserId == userId && uf.DestinationId == d.Id))
                 .Include(d => d.VirtualTour)
+                .Include(d => d.Category)
                 .ToListAsync();
         }
     }
